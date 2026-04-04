@@ -66,25 +66,57 @@ export const CATEGORIES: CategoryConfig[] = [
     targetCount: 12,
   },
   {
-    id: "mn-sports",
-    label: "MN Sports",
+    id: "mn-pro-sports",
+    label: "MN Pro Sports",
     fetchType: "rss",
     feeds: [
-      "https://news.google.com/rss/search?q=Minnesota+Timberwolves+OR+Minnesota+Wild+OR+Minnesota+Twins&hl=en-US&gl=US&ceid=US:en",
-      "https://news.google.com/rss/search?q=Minnesota+Vikings+OR+Minnesota+Lynx+OR+Minnesota+Gophers&hl=en-US&gl=US&ceid=US:en",
-      "https://news.google.com/rss/search?q=Minnesota+high+school+hockey+OR+basketball+MSHSL&hl=en-US&gl=US&ceid=US:en",
-      "https://news.google.com/rss/search?q=Stillwater+Ponies+high+school&hl=en-US&gl=US&ceid=US:en",
-      "https://bringmethenews.com/.rss/full/",
+      "https://news.google.com/rss/search?q=Minnesota+Timberwolves&hl=en-US&gl=US&ceid=US:en",
+      "https://news.google.com/rss/search?q=Minnesota+Wild&hl=en-US&gl=US&ceid=US:en",
+      "https://news.google.com/rss/search?q=Minnesota+Twins&hl=en-US&gl=US&ceid=US:en",
+      "https://news.google.com/rss/search?q=Minnesota+Vikings&hl=en-US&gl=US&ceid=US:en",
+      "https://news.google.com/rss/search?q=Minnesota+Lynx&hl=en-US&gl=US&ceid=US:en",
     ],
     maxAgeHours: 96,
     targetCount: 12,
-    promptRules: `MN Sports required mix:
-- At least 2 pro team stories (Timberwolves, Wild, Twins, Vikings, or Lynx)
-- At least 1 Gophers story if available
-- At least 1 high school story (boys or girls hockey or basketball) if available
-- PRIORITY: If ANY Stillwater Ponies (Stillwater Area High School) story exists in the feed, you MUST include it regardless of other content priorities. Stillwater Ponies content is the highest priority for this user.
-- Sources to prioritize for Stillwater coverage: Stillwater Gazette, Bring Me The News, Pioneer Press prep sports, KARE11 prep sports
-- Fill remaining slots with most newsworthy MN sports content`,
+    promptRules: `Include stories from all 5 Minnesota pro teams: Timberwolves, Wild, Twins, Vikings, and Lynx.
+- Try to include at least 1 story per team if available
+- Fill remaining slots with the most newsworthy MN pro sports content
+- Only include professional Minnesota team stories — no college or high school`,
+  },
+  {
+    id: "mn-college-sports",
+    label: "MN College Sports",
+    fetchType: "rss",
+    feeds: [
+      "https://news.google.com/rss/search?q=Minnesota+Gophers+hockey+OR+basketball+OR+football&hl=en-US&gl=US&ceid=US:en",
+      "https://news.google.com/rss/search?q=UMD+Bulldogs+OR+Mankato+Mavericks+OR+St+Thomas+Tommies&hl=en-US&gl=US&ceid=US:en",
+      "https://news.google.com/rss/search?q=NCHC+hockey+Minnesota&hl=en-US&gl=US&ceid=US:en",
+    ],
+    maxAgeHours: 96,
+    targetCount: 10,
+    promptRules: `Focus on Minnesota college sports:
+- Minnesota Gophers hockey, basketball, and football are top priority
+- Also include UMD Bulldogs, MSU Mankato Mavericks, and St. Thomas Tommies
+- NCHC hockey conference news involving Minnesota teams
+- Only include college-level athletics — no pro or high school`,
+  },
+  {
+    id: "stillwater-ponies",
+    label: "Stillwater Ponies",
+    fetchType: "rss",
+    feeds: [
+      "https://news.google.com/rss/search?q=Stillwater+Ponies+high+school&hl=en-US&gl=US&ceid=US:en",
+      "https://news.google.com/rss/search?q=Stillwater+Area+High+School+athletics&hl=en-US&gl=US&ceid=US:en",
+      "https://news.google.com/rss/search?q=Stillwater+Ponies+hockey+OR+basketball+OR+football&hl=en-US&gl=US&ceid=US:en",
+    ],
+    maxAgeHours: 336, // 14 days — widen window since HS coverage is sparse
+    targetCount: 10,
+    promptRules: `You are a Stillwater Area High School sports reporter. Only include stories about Stillwater Ponies athletics.
+- Cover all sports: hockey (boys and girls), basketball, football, baseball, lacrosse, swimming
+- If fewer than 3 stories are available, widen the search window to 2 weeks
+- Never include stories about other schools unless they are playing against Stillwater
+- Priority sources: Stillwater Gazette, Bring Me The News, Pioneer Press prep sports, KARE11 prep sports
+- This is the highest priority tab for the primary user`,
   },
   {
     id: "college-athletics",

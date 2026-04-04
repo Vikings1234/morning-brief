@@ -8,7 +8,7 @@ interface NewsCardProps {
 }
 
 function getBadgeClass(categoryId: string): string {
-  if (categoryId === "mn-sports" || categoryId === "college-athletics") {
+  if (["mn-pro-sports", "mn-college-sports", "stillwater-ponies", "college-athletics"].includes(categoryId)) {
     return "source-badge sports";
   }
   if (categoryId === "people-purpose") {
