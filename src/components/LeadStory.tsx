@@ -1,6 +1,6 @@
 "use client";
 
-import { NewsArticle } from "@/lib/cache";
+import type { NewsArticle } from "@/lib/types";
 
 interface LeadStoryProps {
   article: NewsArticle;

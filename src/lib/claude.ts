@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { FeedItem } from "./rss";
-import { NewsArticle } from "./cache";
+import { NewsArticle } from "./types";
 import { BANNED_SOURCES_STRING } from "./categories";
 
 const anthropic = new Anthropic();

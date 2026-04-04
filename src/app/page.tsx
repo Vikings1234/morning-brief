@@ -5,7 +5,7 @@ import TabBar from "@/components/TabBar";
 import LeadStory from "@/components/LeadStory";
 import NewsCard from "@/components/NewsCard";
 import { CATEGORIES } from "@/lib/categories";
-import { NewsArticle } from "@/lib/cache";
+import type { NewsArticle } from "@/lib/types";
 
 interface CategoryData {
   articles: NewsArticle[];
@@ -33,9 +33,9 @@ export default function Home() {
   const fetchCategory = useCallback(async (categoryId: string) => {
     setLoadingTabs((prev) => new Set(prev).add(categoryId));
 
-    // 15-second timeout
+    // 90-second timeout — RSS fetches + Claude API can take a while on cold start
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
+    const timeout = setTimeout(() => controller.abort(), 90000);
 
     try {
       const res = await fetch(`/api/news?category=${categoryId}`, {

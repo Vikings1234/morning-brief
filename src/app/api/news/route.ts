@@ -10,8 +10,8 @@ import {
   getCachedArticles,
   setCachedArticles,
   getCacheTimestamp,
-  NewsArticle,
 } from "@/lib/cache";
+import type { NewsArticle } from "@/lib/types";
 
 export const maxDuration = 60; // Vercel function timeout
 

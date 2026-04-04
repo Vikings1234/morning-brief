@@ -154,16 +154,15 @@ export async function fetchAllFeeds(
   feeds: string[],
   maxAgeHours: number
 ): Promise<FeedItem[]> {
+  // Fetch all feeds in parallel — they go to different domains so no rate limit concern
+  const results = await Promise.allSettled(
+    feeds.map((url) => fetchRSSFeed(url, maxAgeHours))
+  );
+
   const allItems: FeedItem[] = [];
-
-  // Fetch feeds sequentially with 2-second gaps to avoid rate limits
-  for (let i = 0; i < feeds.length; i++) {
-    const items = await fetchRSSFeed(feeds[i], maxAgeHours);
-    allItems.push(...items);
-
-    // 2-second gap between feeds (skip after last feed)
-    if (i < feeds.length - 1) {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+  for (const result of results) {
+    if (result.status === "fulfilled") {
+      allItems.push(...result.value);
     }
   }
 
