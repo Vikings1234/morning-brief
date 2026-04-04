@@ -1,0 +1,35 @@
+"use client";
+
+import { NewsArticle } from "@/lib/cache";
+
+interface LeadStoryProps {
+  article: NewsArticle;
+  categoryId: string;
+}
+
+function getBadgeClass(categoryId: string): string {
+  if (categoryId === "mn-sports" || categoryId === "college-athletics") {
+    return "source-badge sports";
+  }
+  if (categoryId === "people-purpose") {
+    return "source-badge community";
+  }
+  return "source-badge";
+}
+
+export default function LeadStory({ article, categoryId }: LeadStoryProps) {
+  return (
+    <article className="lead-story">
+      <h2 className="lead-title">
+        <a href={article.url} target="_blank" rel="noopener noreferrer">
+          {article.title}
+        </a>
+      </h2>
+      <p className="lead-summary">{article.summary}</p>
+      <div className="lead-meta">
+        <span className={getBadgeClass(categoryId)}>{article.source}</span>
+        <span className="time-label">{article.timeAgo}</span>
+      </div>
+    </article>
+  );
+}
