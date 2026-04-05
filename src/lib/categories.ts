@@ -118,21 +118,7 @@ export const CATEGORIES: CategoryConfig[] = [
 - Priority sources: Stillwater Gazette, Bring Me The News, Pioneer Press prep sports, KARE11 prep sports
 - This is the highest priority tab for the primary user`,
   },
-  {
-    id: "college-athletics",
-    label: "College Athletics",
-    fetchType: "web-fetch",
-    feeds: [
-      "https://gophersports.com",
-      "https://msumavericks.com",
-      "https://umdbulldogs.com",
-      "https://tommiesports.com",
-    ],
-    maxAgeHours: 48,
-    targetCount: 10,
-    promptRules:
-      "Focus on University of Minnesota Gophers, MSU Mankato Mavericks, UMD Bulldogs, and St. Thomas Tommies. Use College Hockey News as fallback for hockey scores.",
-  },
+
   {
     id: "politics",
     label: "Politics",

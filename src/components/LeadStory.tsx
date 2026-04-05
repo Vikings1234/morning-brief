@@ -8,7 +8,7 @@ interface LeadStoryProps {
 }
 
 function getBadgeClass(categoryId: string): string {
-  if (["mn-pro-sports", "mn-college-sports", "stillwater-ponies", "college-athletics"].includes(categoryId)) {
+  if (["mn-pro-sports", "mn-college-sports", "stillwater-ponies"].includes(categoryId)) {
     return "source-badge sports";
   }
   if (categoryId === "people-purpose") {

@@ -49,7 +49,7 @@ Select the best ${targetCount} articles and return the JSON array.`;
   try {
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 4096,
+      max_tokens: 1000,
       messages: [{ role: "user", content: userPrompt }],
       system: systemPrompt,
     });
@@ -67,15 +67,7 @@ Select the best ${targetCount} articles and return the JSON array.`;
     return articles;
   } catch (error) {
     console.error(`Claude API error for ${categoryLabel}:`, error);
-    // Fallback: return feed items as-is without summaries
-    return feedItems.slice(0, targetCount).map((item) => ({
-      title: item.title,
-      summary: item.description || "No summary available.",
-      source: item.source,
-      url: item.link,
-      timeAgo: item.timeAgo,
-      pubDate: item.pubDate,
-    }));
+    throw error; // Let caller handle fallback
   }
 }
 
@@ -111,7 +103,7 @@ Return format:
   try {
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 4096,
+      max_tokens: 1000,
       messages: [
         {
           role: "user",
@@ -132,52 +124,6 @@ Return format:
     return JSON.parse(jsonStr);
   } catch (error) {
     console.error("Claude API error for People & Purpose:", error);
-    return [];
-  }
-}
-
-export async function fetchCollegeAthletics(): Promise<NewsArticle[]> {
-  const systemPrompt = `You are a sports editor creating a college athletics roundup for a Minnesota reader. Focus on:
-- University of Minnesota Gophers (all sports)
-- Minnesota State Mankato Mavericks
-- UMD Bulldogs
-- St. Thomas Tommies
-- College hockey (use College Hockey News as a source reference)
-
-RULES:
-- Return a JSON array ONLY — no markdown, no backticks, no preamble
-- Up to 10 articles covering recent games, scores, and news
-- Use real team/school homepage URLs when no specific article URL exists
-- BANNED SOURCES: ${BANNED_SOURCES_STRING}
-
-Return format:
-[{"title": "...", "summary": "Two sentences.", "source": "Source Name", "url": "https://...", "timeAgo": "recent", "pubDate": "${new Date().toISOString()}"}]`;
-
-  try {
-    const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 4096,
-      messages: [
-        {
-          role: "user",
-          content:
-            "Create a college athletics roundup for Minnesota teams. Include recent games, standings, and notable performances. Return JSON array.",
-        },
-      ],
-      system: systemPrompt,
-    });
-
-    const text =
-      response.content[0].type === "text" ? response.content[0].text : "";
-
-    let jsonStr = text.trim();
-    if (jsonStr.startsWith("```")) {
-      jsonStr = jsonStr.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
-    }
-
-    return JSON.parse(jsonStr);
-  } catch (error) {
-    console.error("Claude API error for College Athletics:", error);
     return [];
   }
 }

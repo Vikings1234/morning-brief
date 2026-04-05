@@ -4,7 +4,6 @@ import { fetchAllFeeds } from "@/lib/rss";
 import {
   selectAndSummarize,
   fetchPeopleAndPurpose,
-  fetchCollegeAthletics,
 } from "@/lib/claude";
 import {
   getCachedArticles,
@@ -13,13 +12,12 @@ import {
 } from "@/lib/cache";
 import type { NewsArticle } from "@/lib/types";
 
-export const maxDuration = 60; // Vercel function timeout
+export const maxDuration = 45;
 
 export async function GET(request: NextRequest) {
   const categoryId = request.nextUrl.searchParams.get("category");
 
   if (!categoryId) {
-    // Return cache status for all categories
     const status = CATEGORIES.map((cat) => ({
       id: cat.id,
       label: cat.label,
@@ -44,32 +42,40 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Fetch fresh content
   let articles: NewsArticle[];
 
   try {
     if (category.fetchType === "web-search" && categoryId === "people-purpose") {
       articles = await fetchPeopleAndPurpose();
-    } else if (
-      category.fetchType === "web-fetch" &&
-      categoryId === "college-athletics"
-    ) {
-      articles = await fetchCollegeAthletics();
     } else {
-      // RSS-based categories
+      // RSS-based categories — fetch all feeds in parallel
       const feedItems = await fetchAllFeeds(
         category.feeds,
         category.maxAgeHours
       );
-      articles = await selectAndSummarize(
-        category.label,
-        feedItems,
-        category.targetCount,
-        category.promptRules
-      );
+
+      try {
+        // Try Claude summarization
+        articles = await selectAndSummarize(
+          category.label,
+          feedItems,
+          category.targetCount,
+          category.promptRules
+        );
+      } catch (error) {
+        // Fallback: return raw RSS items without AI summaries
+        console.error(`Claude failed for ${categoryId}, using RSS fallback:`, error);
+        articles = feedItems.slice(0, category.targetCount).map((item) => ({
+          title: item.title,
+          summary: item.description || "No summary available.",
+          source: item.source,
+          url: item.link,
+          timeAgo: item.timeAgo,
+          pubDate: item.pubDate,
+        }));
+      }
     }
 
-    // Cache the results
     if (articles.length > 0) {
       setCachedArticles(categoryId, articles);
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import TabBar from "@/components/TabBar";
 import LeadStory from "@/components/LeadStory";
 import NewsCard from "@/components/NewsCard";
@@ -28,12 +28,23 @@ export default function Home() {
   const [loadingTabs, setLoadingTabs] = useState<Set<string>>(new Set());
   const [errorTabs, setErrorTabs] = useState<Set<string>>(new Set());
   const [timedOutTabs, setTimedOutTabs] = useState<Set<string>>(new Set());
-  const fetchedRef = useRef(false);
 
   const fetchCategory = useCallback(async (categoryId: string) => {
-    setLoadingTabs((prev) => new Set(prev).add(categoryId));
+    // Skip if already loaded or currently loading
+    if (loadingTabs.has(categoryId)) return;
 
-    // 90-second timeout — RSS fetches + Claude API can take a while on cold start
+    setLoadingTabs((prev) => new Set(prev).add(categoryId));
+    setErrorTabs((prev) => {
+      const next = new Set(prev);
+      next.delete(categoryId);
+      return next;
+    });
+    setTimedOutTabs((prev) => {
+      const next = new Set(prev);
+      next.delete(categoryId);
+      return next;
+    });
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 90000);
 
@@ -64,33 +75,14 @@ export default function Home() {
         return next;
       });
     }
-  }, []);
+  }, [loadingTabs]);
 
+  // Fetch active tab when it changes (or on initial load)
   useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
-
-    async function fetchAll() {
-      // Priority: fetch Top Stories and Minnesota first
-      const priority = ["top-stories", "minnesota"];
-      await Promise.all(priority.map((id) => fetchCategory(id)));
-
-      // Remaining categories in batches of 2 with 2-second gaps
-      const remaining = CATEGORIES.filter(
-        (c) => !priority.includes(c.id)
-      ).map((c) => c.id);
-
-      for (let i = 0; i < remaining.length; i += 2) {
-        const batch = remaining.slice(i, i + 2);
-        await Promise.all(batch.map((id) => fetchCategory(id)));
-        if (i + 2 < remaining.length) {
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-        }
-      }
+    if (!data[activeTab] && !loadingTabs.has(activeTab)) {
+      fetchCategory(activeTab);
     }
-
-    fetchAll();
-  }, [fetchCategory]);
+  }, [activeTab, data, loadingTabs, fetchCategory]);
 
   const loadedTabs = new Set(Object.keys(data));
   const currentData = data[activeTab];
