@@ -5,7 +5,22 @@ import { BANNED_SOURCES_STRING } from "./categories";
 
 const anthropic = new Anthropic();
 
+function getReturnFormat(categoryId: string): string {
+  if (
+    categoryId === "mn-pro-sports" ||
+    categoryId === "mn-college-sports" ||
+    categoryId === "stillwater-ponies"
+  ) {
+    return `[{"title": "...", "summary": "Two sentences with scores and key details.", "source": "Source Name", "url": "https://...", "timeAgo": "3h ago", "pubDate": "ISO date", "scope": "Pro|College|High School"}]`;
+  }
+  if (categoryId === "people-purpose") {
+    return `[{"title": "...", "summary": "Two warm factual sentences about real impact.", "source": "Source Name", "url": "https://...", "timeAgo": "3h ago", "pubDate": "ISO date", "scope": "Twin Cities|Minnesota|Greater Minnesota|National", "impact": "3-5 word descriptor e.g. Feeding 4,000 weekly"}]`;
+  }
+  return `[{"title": "...", "summary": "Two sentence summary.", "source": "Source Name", "url": "https://...", "timeAgo": "3h ago", "pubDate": "ISO date"}]`;
+}
+
 export async function selectAndSummarize(
+  categoryId: string,
   categoryLabel: string,
   feedItems: FeedItem[],
   targetCount: number,
@@ -22,9 +37,11 @@ export async function selectAndSummarize(
     )
     .join("\n\n");
 
+  const isSports = ["mn-pro-sports", "mn-college-sports", "stillwater-ponies"].includes(categoryId);
+
   const systemPrompt = `You are a news editor selecting the best articles for a daily news dashboard read by an 81-year-old man in Stillwater, Minnesota. He reads this every morning at 5 AM.
 
-Your job: select the ${targetCount} most important and interesting articles from the feed items provided, and write a clean 2-sentence summary for each.
+Your job: select the ${targetCount} most important and interesting articles from the feed items provided, and write a clean 2-sentence summary for each.${isSports ? " Include actual scores, standings, and key player performances when available." : ""}
 
 RULES:
 - Maximum 1 article per source — prevents any single source flooding the tab
@@ -36,7 +53,7 @@ RULES:
 ${promptRules ? `\nCATEGORY-SPECIFIC RULES:\n${promptRules}` : ""}
 
 Return format — a JSON array of objects with these exact fields:
-[{"title": "...", "summary": "Two sentence summary.", "source": "Source Name", "url": "https://...", "timeAgo": "3h ago", "pubDate": "ISO date string"}]`;
+${getReturnFormat(categoryId)}`;
 
   const userPrompt = `Category: ${categoryLabel}
 
@@ -49,7 +66,7 @@ Select the best ${targetCount} articles and return the JSON array.`;
   try {
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 1000,
+      max_tokens: 2000,
       messages: [{ role: "user", content: userPrompt }],
       system: systemPrompt,
     });
@@ -57,7 +74,6 @@ Select the best ${targetCount} articles and return the JSON array.`;
     const text =
       response.content[0].type === "text" ? response.content[0].text : "";
 
-    // Parse JSON from response — handle possible markdown wrapping
     let jsonStr = text.trim();
     if (jsonStr.startsWith("```")) {
       jsonStr = jsonStr.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
@@ -67,23 +83,16 @@ Select the best ${targetCount} articles and return the JSON array.`;
     return articles;
   } catch (error) {
     console.error(`Claude API error for ${categoryLabel}:`, error);
-    throw error; // Let caller handle fallback
+    throw error;
   }
 }
 
-export async function fetchPeopleAndPurpose(): Promise<NewsArticle[]> {
-  const queries = [
-    "Minnesota food bank volunteer community",
-    "Minnesota housing help nonprofit",
-    "Minnesota teacher making a difference",
-    "Minnesota nonprofit community impact",
-    "rural Minnesota community stories",
-    "Minnesota volunteer charity local hero",
-  ];
+export async function fetchPeopleAndPurpose(
+  feedItems: FeedItem[]
+): Promise<NewsArticle[]> {
+  const systemPrompt = `You are a community impact news editor for a daily news dashboard. The reader is an 81-year-old man in Stillwater, MN.
 
-  const systemPrompt = `You are a news editor finding heartwarming Minnesota community stories for a daily news dashboard. The reader is an 81-year-old man in Stillwater, MN.
-
-Based on your knowledge, create 6 compelling community impact stories from Minnesota. These should focus on:
+${feedItems.length > 0 ? "Select the 6 most heartwarming community impact stories from the RSS feed items provided." : "Find 6 compelling community impact stories from Minnesota."} Focus on:
 - Food banks and community feeding programs
 - Housing assistance and Habitat for Humanity
 - Teachers and educators making a difference
@@ -93,23 +102,23 @@ Based on your knowledge, create 6 compelling community impact stories from Minne
 
 RULES:
 - Return a JSON array ONLY — no markdown, no backticks, no preamble
-- Each story should have a realistic title, 2-sentence summary, source name, and a URL to the source's homepage
+- Write 2 warm, factual sentences for each summary about real impact
+- Maximum 1 article per source
 - BANNED SOURCES: ${BANNED_SOURCES_STRING}
-- Focus on positive, uplifting community stories
 
 Return format:
-[{"title": "...", "summary": "Two sentences.", "source": "Source Name", "url": "https://...", "timeAgo": "recent", "pubDate": "${new Date().toISOString()}"}]`;
+[{"title": "...", "summary": "Two warm sentences.", "source": "Source Name", "url": "https://...", "timeAgo": "...", "pubDate": "ISO date", "scope": "Twin Cities|Minnesota|Greater Minnesota|National", "impact": "3-5 word descriptor e.g. Feeding 4,000 weekly"}]`;
+
+  const userContent =
+    feedItems.length > 0
+      ? `Here are recent RSS feed items about Minnesota community stories. Select the 6 best and return the JSON array.\n\n${feedItems.map((item, i) => `[${i + 1}] TITLE: ${item.title}\nSOURCE: ${item.source}\nURL: ${item.link}\nTIME_AGO: ${item.timeAgo}\nDESCRIPTION: ${item.description || "N/A"}`).join("\n\n")}`
+      : "Find 6 recent Minnesota community impact stories. Return JSON array.";
 
   try {
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 1000,
-      messages: [
-        {
-          role: "user",
-          content: `Find 6 recent Minnesota community impact stories. Search topics: ${queries.join(", ")}. Return JSON array.`,
-        },
-      ],
+      max_tokens: 2000,
+      messages: [{ role: "user", content: userContent }],
       system: systemPrompt,
     });
 

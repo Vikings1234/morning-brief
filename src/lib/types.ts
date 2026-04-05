@@ -5,4 +5,6 @@ export interface NewsArticle {
   url: string;
   timeAgo: string;
   pubDate: string;
+  scope?: string;
+  impact?: string;
 }

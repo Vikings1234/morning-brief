@@ -133,7 +133,7 @@ export default function Home() {
               article={currentData.articles[0]}
               categoryId={activeTab}
             />
-            <div className="card-grid">
+            <div className="article-list">
               {currentData.articles.slice(1).map((article, i) => (
                 <NewsCard
                   key={`${activeTab}-${i}`}

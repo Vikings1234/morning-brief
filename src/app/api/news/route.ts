@@ -45,18 +45,29 @@ export async function GET(request: NextRequest) {
   let articles: NewsArticle[];
 
   try {
-    if (category.fetchType === "web-search" && categoryId === "people-purpose") {
-      articles = await fetchPeopleAndPurpose();
-    } else {
-      // RSS-based categories — fetch all feeds in parallel
-      const feedItems = await fetchAllFeeds(
-        category.feeds,
-        category.maxAgeHours
-      );
+    // Fetch RSS feeds in parallel for all RSS-based categories
+    const feedItems = category.feeds.length > 0
+      ? await fetchAllFeeds(category.feeds, category.maxAgeHours)
+      : [];
 
+    if (categoryId === "people-purpose") {
+      // People & Purpose: RSS feeds + specialized Claude prompt
       try {
-        // Try Claude summarization
+        articles = await fetchPeopleAndPurpose(feedItems);
+      } catch {
+        articles = feedItems.slice(0, category.targetCount).map((item) => ({
+          title: item.title,
+          summary: item.description || "No summary available.",
+          source: item.source,
+          url: item.link,
+          timeAgo: item.timeAgo,
+          pubDate: item.pubDate,
+        }));
+      }
+    } else {
+      try {
         articles = await selectAndSummarize(
+          categoryId,
           category.label,
           feedItems,
           category.targetCount,

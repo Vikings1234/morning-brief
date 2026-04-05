@@ -44,12 +44,18 @@ export const CATEGORIES: CategoryConfig[] = [
   {
     id: "people-purpose",
     label: "\u2764 People & Purpose",
-    fetchType: "web-search",
-    feeds: [],
+    fetchType: "rss",
+    feeds: [
+      "https://www.mprnews.org/topic/all-news/rss",
+      "https://www.minnpost.com/feed/",
+      "https://sahanjournal.com/feed/",
+      "https://feeds.npr.org/1001/rss.xml",
+      "https://news.google.com/rss/search?q=Minnesota+nonprofit+OR+food+bank+OR+homeless+shelter+OR+community+service&hl=en-US&gl=US&ceid=US:en",
+    ],
     maxAgeHours: 336, // 14 days
     targetCount: 6,
     promptRules:
-      "Search for Minnesota community stories: food banks, housing help, teachers making a difference, nonprofits, rural MN stories, volunteer efforts. Focus on positive community impact.",
+      "Select stories about community impact: food banks, housing help, teachers, nonprofits, rural MN, volunteer efforts. Only include stories with a positive community angle. Assign scope and impact fields.",
   },
   {
     id: "minnesota",
@@ -80,6 +86,8 @@ export const CATEGORIES: CategoryConfig[] = [
     targetCount: 12,
     promptRules: `Include stories from all 5 Minnesota pro teams: Timberwolves, Wild, Twins, Vikings, and Lynx.
 - Try to include at least 1 story per team if available
+- Include actual scores, standings, and key player performances in summaries
+- Set scope to "Pro" for all articles
 - Fill remaining slots with the most newsworthy MN pro sports content
 - Only include professional Minnesota team stories — no college or high school`,
   },
@@ -98,6 +106,8 @@ export const CATEGORIES: CategoryConfig[] = [
 - Minnesota Gophers hockey, basketball, and football are top priority
 - Also include UMD Bulldogs, MSU Mankato Mavericks, and St. Thomas Tommies
 - NCHC hockey conference news involving Minnesota teams
+- Include actual scores, standings, and key player performances in summaries
+- Set scope to one of: "College Hockey" | "College Men" | "College Women"
 - Only include college-level athletics — no pro or high school`,
   },
   {
@@ -113,6 +123,8 @@ export const CATEGORIES: CategoryConfig[] = [
     targetCount: 10,
     promptRules: `You are a Stillwater Area High School sports reporter. Only include stories about Stillwater Ponies athletics.
 - Cover all sports: hockey (boys and girls), basketball, football, baseball, lacrosse, swimming
+- Include actual scores and key player performances in summaries when available
+- Set scope to one of: "High School Boys" | "High School Girls" | "Prep Sports"
 - If fewer than 3 stories are available, widen the search window to 2 weeks
 - Never include stories about other schools unless they are playing against Stillwater
 - Priority sources: Stillwater Gazette, Bring Me The News, Pioneer Press prep sports, KARE11 prep sports
