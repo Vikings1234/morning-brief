@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CATEGORIES } from "@/lib/categories";
-import { fetchAllFeeds } from "@/lib/rss";
+import { fetchAllFeeds, stripHtml } from "@/lib/rss";
 import {
   selectAndSummarize,
   fetchPeopleAndPurpose,
@@ -75,6 +75,13 @@ export async function GET(request: NextRequest) {
         }));
       }
     }
+
+    // Sanitize all article text before caching/returning
+    articles = articles.map((a) => ({
+      ...a,
+      title: stripHtml(a.title),
+      summary: stripHtml(a.summary),
+    }));
 
     if (articles.length > 0) {
       setCachedArticles(categoryId, articles);

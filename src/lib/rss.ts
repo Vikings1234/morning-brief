@@ -9,6 +9,21 @@ export interface FeedItem {
   description?: string;
 }
 
+export function stripHtml(text: string): string {
+  return text
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&#\d+;/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 const parser = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: "@_",
@@ -111,25 +126,33 @@ export async function fetchRSSFeed(
     const itemArray = Array.isArray(rawItems) ? rawItems : [rawItems];
 
     for (const item of itemArray) {
-      const title = item.title?.toString() || "";
+      const rawTitle = item.title?.toString() || "";
       const link =
         item.link?.["@_href"] || item.link?.toString() || "";
       const pubDate =
         item.pubDate || item.published || item.updated || "";
 
-      if (!title || !link) continue;
+      if (!rawTitle || !link) continue;
 
       const pubDateObj = new Date(pubDate);
       if (pubDate && pubDateObj < cutoff) continue;
 
+      // Filter out MaxPreps schedule/roster pages
+      if (
+        link.includes("maxpreps.com") &&
+        /schedule|roster/i.test(rawTitle)
+      ) {
+        continue;
+      }
+
       const source = isGoogleNews
-        ? extractGoogleNewsSource(title)
+        ? extractGoogleNewsSource(rawTitle)
         : extractSource(link, feedUrl);
 
-      // Clean Google News title (remove " - Source" suffix)
-      const cleanTitle = isGoogleNews
-        ? title.replace(/ - [^-]+$/, "").trim()
-        : title;
+      // Clean Google News title (remove " - Source" suffix) and strip HTML
+      const cleanTitle = stripHtml(
+        isGoogleNews ? rawTitle.replace(/ - [^-]+$/, "") : rawTitle
+      );
 
       items.push({
         title: cleanTitle,
@@ -137,9 +160,9 @@ export async function fetchRSSFeed(
         pubDate: pubDate || new Date().toISOString(),
         source,
         timeAgo: computeTimeAgo(pubDate || new Date().toISOString()),
-        description:
-          item.description?.toString()?.replace(/<[^>]*>/g, "")?.slice(0, 300) ||
-          "",
+        description: stripHtml(
+          item.description?.toString()?.slice(0, 300) || ""
+        ),
       });
     }
 

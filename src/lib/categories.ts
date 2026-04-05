@@ -105,9 +105,9 @@ export const CATEGORIES: CategoryConfig[] = [
     label: "Stillwater Ponies",
     fetchType: "rss",
     feeds: [
-      "https://news.google.com/rss/search?q=Stillwater+Ponies+high+school&hl=en-US&gl=US&ceid=US:en",
-      "https://news.google.com/rss/search?q=Stillwater+Area+High+School+athletics&hl=en-US&gl=US&ceid=US:en",
-      "https://news.google.com/rss/search?q=Stillwater+Ponies+hockey+OR+basketball+OR+football&hl=en-US&gl=US&ceid=US:en",
+      "https://news.google.com/rss/search?q=%22Stillwater+Ponies%22&hl=en-US&gl=US&ceid=US:en",
+      "https://news.google.com/rss/search?q=%22Stillwater+Area+High+School%22+sports&hl=en-US&gl=US&ceid=US:en",
+      "https://news.google.com/rss/search?q=Stillwater+MN+high+school+sports&hl=en-US&gl=US&ceid=US:en",
     ],
     maxAgeHours: 336, // 14 days — widen window since HS coverage is sparse
     targetCount: 10,
